@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <title>IntervalHQ</title>
+  <style>
+    /* ── Base ─────────────────────────────────────────────────────────────── */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #000; color: #f5f5f5; min-height: 100vh; }
+    .page { max-width: 960px; margin: 0 auto; padding: 32px; }
+    h1 { margin: 0; font-size: 2.5rem; text-align: center; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 700; }
+    .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 24px; margin-bottom: 24px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    label { display: flex; flex-direction: column; font-size: 0.9rem; color: #b0bec5; font-weight: 500; }
+    select, input[type="text"], input[type="number"] { padding: 12px 16px; margin-top: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); color: #eee; font-size: 1rem; transition: border-color 0.3s, box-shadow 0.3s; }
+    select:focus, input[type="text"]:focus, input[type="number"]:focus { outline: none; border-color: #4ecdc4; box-shadow: 0 0 0 3px rgba(78,205,196,0.2); }
+    select option { background: #111; color: #eee; }
+    button { border: none; border-radius: 12px; padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; background: linear-gradient(45deg, #ff6b6b, #ffa726); color: white; box-shadow: 0 4px 15px rgba(255,107,107,0.3); transition: transform 0.2s, box-shadow 0.2s; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,107,107,0.4); }
+    button:active { transform: translateY(0); }
+    button:disabled { background: #444; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
+    input[type="checkbox"] { margin-right: 12px; transform: scale(1.3); accent-color: #ff6b6b; }
+
+    /* ── App-level tabs (Interval Timer / Circuit Designer) ──────────────── */
+    .app-tabs { display: flex; gap: 8px; margin-bottom: 28px; }
+    .app-tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #b0bec5; padding: 14px 32px; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: none; }
+    .app-tab-btn:hover { background: rgba(255,255,255,0.1); color: #eee; transform: translateY(-1px); box-shadow: none; }
+    .app-tab-btn.active { background: linear-gradient(45deg, #ff6b6b, #ffa726); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(255,107,107,0.3); }
+
+    /* ── Inner tabs (Circuit Designer / Exercise Database) ───────────────── */
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .tab-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #b0bec5; padding: 12px 28px; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: none; }
+    .tab-btn:hover { background: rgba(255,255,255,0.1); color: #eee; transform: translateY(-1px); box-shadow: none; }
+    .tab-btn.active { background: linear-gradient(45deg, #ff6b6b, #ffa726); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(255,107,107,0.3); }
+
+    /* ── Interval Timer ──────────────────────────────────────────────────── */
+    .hero { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .logo { display: block; max-width: 360px; width: 100%; height: auto; border-radius: 24px; box-shadow: 0 12px 40px rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.14); }
+    .logo-fullscreen { display: none; }
+    .fullscreen-card .logo-fullscreen { display: block; max-width: 260px; width: 100%; height: auto; border-radius: 18px; box-shadow: 0 12px 40px rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.18); }
+    .interval-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); transition: background 0.3s ease; }
+    .interval-row:hover { background: rgba(255,255,255,0.05); }
+    .interval-row label { margin: 0; min-width: 0; }
+    .interval-row button { min-width: 0; padding: 10px 12px; margin: 0; box-sizing: border-box; align-self: flex-end; }
+    .interval-name-label { flex: 1; min-width: 140px; }
+    .interval-name-label input { width: 100%; box-sizing: border-box; }
+    .duration-group { display: flex; gap: 8px; align-items: flex-end; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.08); }
+    .duration-group .group-label { font-size: 0.85rem; color: #90a4ae; font-weight: 700; padding-bottom: 14px; min-width: 30px; }
+    .duration-group input[type="number"] { width: 72px; box-sizing: border-box; margin-top: 6px; padding-right: 4px; }
+    .duration-group select { width: 72px; box-sizing: border-box; margin-top: 6px; padding: 10px 4px; }
+    .status { font-size: 1.4rem; margin-bottom: 12px; text-align: center; font-weight: 600; color: #4ecdc4; }
+    .timer-name { font-size: 1.8rem; margin-bottom: 12px; color: #e3f2fd; text-align: center; font-weight: 700; }
+    .timer { font-size: 5rem; letter-spacing: 0.2em; margin: 0; text-align: center; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.5); transition: color 0.3s ease, text-shadow 0.3s ease; }
+    .timer.updating { animation: pulse 0.5s ease; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); color: #4ecdc4; text-shadow: 0 0 30px rgba(78,205,196,0.8); }
+      100% { transform: scale(1); }
+    }
+    .details { font-size: 1.1rem; color: #b0bec5; margin-top: 12px; text-align: center; font-weight: 500; }
+    .fullscreen-card {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(8px, 2vmin, 24px);
+      margin: 0;
+      padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(32px + env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px) calc(32px + env(safe-area-inset-left, 0px));
+      background: #000;
+      border: none;
+      border-radius: 0;
+      box-sizing: border-box;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .fullscreen-card .status { font-size: clamp(1.8rem, 4vmin, 3.5rem); margin: 0; font-weight: 700; color: #4ecdc4; }
+    .fullscreen-card .timer { font-size: clamp(6rem, 20vmin, 14rem); margin: 0; font-weight: 900; color: #fff; text-shadow: 0 0 40px rgba(255,255,255,0.7); }
+    .fullscreen-card .details { font-size: clamp(1.2rem, 3vmin, 2.8rem); margin: 0; font-weight: 600; }
+    .fullscreen-card div:last-child { margin-top: clamp(8px, 2vmin, 24px); }
+    .fullscreen-card button { font-size: clamp(1rem, 2.5vmin, 1.8rem); padding: clamp(10px, 2vmin, 20px) clamp(20px, 4vmin, 40px); margin: 8px; font-weight: 700; background: linear-gradient(45deg, #ff6b6b, #ffa726); box-shadow: 0 6px 25px rgba(255,107,107,0.4); }
+    .fullscreen-card button:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,107,107,0.5); }
+
+    /* ── Circuit Designer ────────────────────────────────────────────────── */
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-strength { background: rgba(239,83,80,0.18); color: #ef5350; border: 1px solid rgba(239,83,80,0.4); }
+    .badge-cardio   { background: rgba(38,198,218,0.18); color: #26c6da; border: 1px solid rgba(38,198,218,0.4); }
+    .badge-core     { background: rgba(171,71,188,0.18); color: #ab47bc; border: 1px solid rgba(171,71,188,0.4); }
+    .count-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .count-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .count-label.strength { color: #ef5350; }
+    .count-label.cardio   { color: #26c6da; }
+    .count-label.core     { color: #ab47bc; }
+    .count-select { width: 80px; text-align: center; padding: 12px 8px; margin-top: 0; }
+    .exercise-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; transition: background 0.2s; }
+    .exercise-item:hover { background: rgba(255,255,255,0.06); }
+    .exercise-num { font-size: 0.85rem; color: #546e7a; font-weight: 700; min-width: 28px; }
+    .exercise-name { flex: 1; font-size: 1rem; font-weight: 600; color: #e8eaf6; }
+    .reroll-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #90a4ae; padding: 6px 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; box-shadow: none; }
+    .reroll-btn:hover { background: rgba(255,255,255,0.15); color: #eee; transform: translateY(-1px); box-shadow: none; }
+    .category-section { margin-bottom: 20px; }
+    .category-header { margin: 0 0 12px; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .category-header.strength { color: #ef5350; }
+    .category-header.cardio   { color: #26c6da; }
+    .category-header.core     { color: #ab47bc; }
+    .db-exercise-item { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 8px; transition: background 0.2s; }
+    .db-exercise-item:hover { background: rgba(255,255,255,0.06); }
+    .db-exercise-name { flex: 1; font-size: 0.95rem; font-weight: 500; color: #e8eaf6; }
+    .delete-btn { background: rgba(239,83,80,0.1); border: 1px solid rgba(239,83,80,0.3); color: #ef9a9a; padding: 5px 12px; font-size: 0.8rem; border-radius: 8px; font-weight: 600; box-shadow: none; }
+    .delete-btn:hover { background: rgba(239,83,80,0.25); color: #ef5350; box-shadow: none; transform: none; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #90a4ae; padding: 8px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: none; transition: all 0.2s; }
+    .filter-btn:hover { background: rgba(255,255,255,0.1); transform: none; box-shadow: none; }
+    .filter-btn.active { background: rgba(255,255,255,0.12); color: #eee; border-color: rgba(255,255,255,0.3); }
+    .filter-btn.active.strength-btn { background: rgba(239,83,80,0.2); color: #ef5350; border-color: rgba(239,83,80,0.4); }
+    .filter-btn.active.cardio-btn   { background: rgba(38,198,218,0.2); color: #26c6da; border-color: rgba(38,198,218,0.4); }
+    .filter-btn.active.core-btn     { background: rgba(171,71,188,0.2); color: #ab47bc; border-color: rgba(171,71,188,0.4); }
+    .section-title { font-weight: 700; font-size: 1rem; color: #e8eaf6; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .stats { font-size: 0.82rem; color: #546e7a; }
+    .empty-msg { text-align: center; color: #546e7a; padding: 32px; font-size: 0.95rem; }
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0; }
+    .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.96); color: #fff; padding: 14px 28px; border-radius: 14px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12); pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 1000; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div style="margin-bottom: 28px;">
+      <h1>IntervalHQ <span style="font-size: 1rem; font-weight: 400; color: #90a4ae; -webkit-text-fill-color: #90a4ae;">v0.1</span></h1>
+    </div>
+
+    <!-- App-level tabs -->
+    <div class="app-tabs">
+      <button class="app-tab-btn active" data-app-tab="timer">Interval Timer</button>
+      <button class="app-tab-btn" data-app-tab="circuit">Circuit Designer</button>
+    </div>
+
+    <!-- ═══════════════════════ INTERVAL TIMER SECTION ═══════════════════════ -->
+    <div id="app-tab-timer">
+
+      <div class="hero">
+        <img class="logo" src="ff_logo.PNG" alt="Fit Factory logo">
+      </div>
+
+      <div class="card">
+        <div style="margin-top: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+            <strong>Interval Sequence</strong>
+            <div style="display:flex; gap:8px;">
+              <button id="addStepBtn" type="button">Add interval</button>
+              <button id="clearTimerBtn" type="button">Clear Timer</button>
+            </div>
+          </div>
+          <div id="intervalList"></div>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+          <label>Repeat Interval Sequence
+            <select id="rounds">
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+              <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option>
+              <option value="12">12</option><option value="13">13</option><option value="14">14</option>
+              <option value="15">15</option><option value="16">16</option><option value="17">17</option>
+              <option value="18">18</option><option value="19">19</option><option value="20">20</option>
+              <option value="21">21</option><option value="22">22</option><option value="23">23</option>
+              <option value="24">24</option><option value="25">25</option><option value="26">26</option>
+              <option value="27">27</option><option value="28">28</option><option value="29">29</option>
+              <option value="30">30</option>
+            </select>
+          </label>
+          <label>No. of Rounds
+            <select id="repeatCount">
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+              <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option>
+              <option value="12">12</option><option value="13">13</option><option value="14">14</option>
+              <option value="15">15</option><option value="16">16</option><option value="17">17</option>
+              <option value="18">18</option><option value="19">19</option><option value="20">20</option>
+              <option value="21">21</option><option value="22">22</option><option value="23">23</option>
+              <option value="24">24</option><option value="25">25</option><option value="26">26</option>
+              <option value="27">27</option><option value="28">28</option><option value="29">29</option>
+              <option value="30">30</option>
+            </select>
+          </label>
+          <label>Delay Between Rounds (sec)
+            <select id="repeatDelay">
+              <option value="0">0</option><option value="10">10</option><option value="20">20</option>
+              <option value="30" selected>30</option><option value="40">40</option><option value="50">50</option>
+              <option value="60">60</option><option value="70">70</option><option value="80">80</option>
+              <option value="90">90</option><option value="100">100</option><option value="110">110</option>
+              <option value="120">120</option>
+            </select>
+          </label>
+          <label style="flex-direction: row; align-items: center; margin-top: 18px;">
+            <input id="fullscreen" type="checkbox" checked />
+            Fullscreen on Start
+          </label>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+          <label>Display Name
+            <input id="displayName" type="text" placeholder="Shown on screen during timer" style="width: 200px;" />
+          </label>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+          <label>Timer Name
+            <input id="timerName" type="text" placeholder="e.g., HIIT Session" style="width: 200px;" />
+          </label>
+          <button id="saveTimerBtn" type="button" style="margin-top: 24px;">Save Timer</button>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+          <label>Select Timer
+            <select id="loadTimerSelect">
+              <option value="">-- Select a timer --</option>
+            </select>
+          </label>
+          <button id="loadTimerBtn" type="button" style="margin-top: 24px;" disabled>Load Timer</button>
+          <button id="deleteTimerBtn" type="button" style="margin-top: 24px;" disabled>Delete Timer</button>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;" id="timerCard">
+        <img class="logo-fullscreen" src="ff_logo.PNG" alt="Fit Factory logo" />
+        <div class="timer-name" id="timerNameDisplay">Untitled Timer</div>
+        <div class="status" id="status">Ready to start</div>
+        <p class="timer" id="time">00:30</p>
+        <div class="details" id="details">Work, step 1 of 4, round 1 of 8</div>
+        <div style="margin-top: 20px;">
+          <button id="skipBackBtn">&#9664;&#9664; Back</button>
+          <button id="startBtn">&#9654; Start</button>
+          <button id="pauseBtn" disabled>&#9646;&#9646; Pause</button>
+          <button id="resetBtn">&#8634; Reset</button>
+          <button id="skipFwdBtn">Fwd &#9654;&#9654;</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════ CIRCUIT DESIGNER SECTION ══════════════════════ -->
+    <div id="app-tab-circuit" style="display:none;">
+
+      <!-- Inner tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="circuit">Circuit Designer</button>
+        <button class="tab-btn" data-tab="exercises">Exercise Database</button>
+      </div>
+
+      <!-- Circuit Designer tab -->
+      <div id="tab-circuit" class="tab-content">
+        <div class="card">
+          <div class="section-title">Circuit Configuration</div>
+          <div class="row" style="gap: 32px; justify-content: flex-start;">
+            <div class="count-group">
+              <span class="count-label strength">Strength</span>
+              <select id="strengthCount" class="count-select"></select>
+            </div>
+            <div class="count-group">
+              <span class="count-label cardio">Cardio</span>
+              <select id="cardioCount" class="count-select"></select>
+            </div>
+            <div class="count-group">
+              <span class="count-label core">Core</span>
+              <select id="coreCount" class="count-select"></select>
+            </div>
+            <div style="display:flex; align-items:flex-end; padding-bottom:2px;">
+              <button id="generateBtn">Generate Circuit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="circuitResult" style="display:none;">
+          <div class="section-title">
+            <span id="circuitTitle">Generated Circuit</span>
+            <span id="circuitTotalBadge" class="stats"></span>
+          </div>
+          <div id="circuitSections"></div>
+          <hr class="divider" />
+          <div class="row">
+            <label style="flex:1;">Circuit Name
+              <input id="circuitName" type="text" placeholder="e.g. Monday Circuit" style="width:100%; box-sizing:border-box;" />
+            </label>
+            <div style="display:flex; align-items:flex-end;">
+              <button id="saveCircuitBtn">Save Circuit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Saved Circuits</div>
+          <div class="row">
+            <label>Select Circuit
+              <select id="loadCircuitSelect" style="min-width:220px;">
+                <option value="">-- Select a circuit --</option>
+              </select>
+            </label>
+            <div style="display:flex; align-items:flex-end; gap:8px;">
+              <button id="loadCircuitBtn" disabled>Load</button>
+              <button id="deleteCircuitBtn" disabled>Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise Database tab -->
+      <div id="tab-exercises" class="tab-content" style="display:none;">
+        <div class="card">
+          <div class="section-title">Add Exercise</div>
+          <div class="row">
+            <label>Exercise Name
+              <input id="exName" type="text" placeholder="e.g. Push-ups" style="min-width:220px;" />
+            </label>
+            <label>Category
+              <select id="exCategory">
+                <option value="Strength">Strength</option>
+                <option value="Cardio">Cardio</option>
+                <option value="Core">Core</option>
+              </select>
+            </label>
+            <div style="display:flex; align-items:flex-end;">
+              <button id="addExBtn">Add Exercise</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            Exercise Library
+            <span class="stats" id="exStats"></span>
+          </div>
+          <div class="filter-row">
+            <button class="filter-btn all-btn active" data-cat="All">All</button>
+            <button class="filter-btn strength-btn" data-cat="Strength">Strength</button>
+            <button class="filter-btn cardio-btn" data-cat="Cardio">Cardio</button>
+            <button class="filter-btn core-btn" data-cat="Core">Core</button>
+          </div>
+          <div id="exerciseList"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════════
+    // APP-LEVEL TAB SWITCHING
+    // ═══════════════════════════════════════════════════════════════════════
+    document.querySelectorAll('.app-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.app-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('[id^="app-tab-"]').forEach(s => s.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById('app-tab-' + btn.dataset.appTab).style.display = '';
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // INTERVAL TIMER
+    // ═══════════════════════════════════════════════════════════════════════
+
+    const roundsInput       = document.getElementById('rounds');
+    const repeatCountInput  = document.getElementById('repeatCount');
+    const repeatDelayInput  = document.getElementById('repeatDelay');
+    const fullscreenInput   = document.getElementById('fullscreen');
+    const intervalList      = document.getElementById('intervalList');
+    const addStepBtn        = document.getElementById('addStepBtn');
+    const timerNameInput    = document.getElementById('timerName');
+    const displayNameInput  = document.getElementById('displayName');
+    const saveTimerBtn      = document.getElementById('saveTimerBtn');
+    const loadTimerSelect   = document.getElementById('loadTimerSelect');
+    const loadTimerBtn      = document.getElementById('loadTimerBtn');
+    const deleteTimerBtn    = document.getElementById('deleteTimerBtn');
+    const statusEl          = document.getElementById('status');
+    const timeEl            = document.getElementById('time');
+    const detailsEl         = document.getElementById('details');
+    const timerNameDisplay  = document.getElementById('timerNameDisplay');
+    const startBtn          = document.getElementById('startBtn');
+    const pauseBtn          = document.getElementById('pauseBtn');
+    const resetBtn          = document.getElementById('resetBtn');
+    const timerCard         = document.getElementById('timerCard');
+
+    let timerId = null;
+    let timeLeft = 0;
+    let round = 1;
+    let stepIndex = 0;
+    let currentSession = 1;
+    let active = false;
+    let isCountdown = false;
+    let isBetweenRepeats = false;
+    let countdownTime = 0;
+    let repeatDelayLeft = 0;
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    const bellAudio = new Audio('Boxing Triple Bell.mp3');
+    let audioUnlocked = false;
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      bellAudio.play().then(() => { bellAudio.pause(); bellAudio.currentTime = 0; audioUnlocked = true; }).catch(() => {});
+    }
+
+    function playBell() {
+      bellAudio.currentTime = 0;
+      bellAudio.play().catch(() => {});
+    }
+
+    function playPhaseSound(type) {
+      if (type === 'Work' || type === 'High' || type === 'Low') playBell();
+    }
+
+    function playWorkStart() { playBell(); }
+    function playRestStart() {}
+
+    function isFullscreenSupported() {
+      if (isIOS) return false;
+      return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled || document.mozFullScreenEnabled || document.msFullscreenEnabled);
+    }
+
+    function enterFullscreen() {
+      if (isFullscreenSupported()) {
+        const elem = timerCard;
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+      } else {
+        timerCard.classList.add('fullscreen-card');
+      }
+    }
+
+    function updateFullscreenClass() {
+      if (!isFullscreenSupported()) return;
+      const isFull = document.fullscreenElement === timerCard
+        || document.webkitFullscreenElement === timerCard
+        || document.mozFullScreenElement === timerCard
+        || document.msFullscreenElement === timerCard;
+      timerCard.classList.toggle('fullscreen-card', Boolean(isFull));
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenClass);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenClass);
+    document.addEventListener('mozfullscreenchange', updateFullscreenClass);
+    document.addEventListener('MSFullscreenChange', updateFullscreenClass);
+
+    function exitFullscreen() {
+      if (!isFullscreenSupported()) { timerCard.classList.remove('fullscreen-card'); return; }
+      if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+      }
+    }
+
+    function buildMinOptions(selected) {
+      return [0,1,2,3,4,5,6,7,8,9,10,11,12].map(v => `<option value="${v}"${v == selected ? ' selected' : ''}>${v}</option>`).join('');
+    }
+
+    function buildSecOptions(selected) {
+      return [0,5,10,15,20,25,30,35,40,45,50,55,60].map(v => `<option value="${v}"${v == selected ? ' selected' : ''}>${v}</option>`).join('');
+    }
+
+    function createIntervalRow(step = { name: '', workMin: 0, workSec: 30, restMin: 0, restSec: 15 }) {
+      const row = document.createElement('div');
+      row.className = 'interval-row';
+      row.innerHTML = `
+        <label class="interval-name-label">
+          Exercise name
+          <input class="interval-name" type="text" placeholder="e.g. Squats" value="${step.name || ''}" />
+        </label>
+        <div class="duration-group">
+          <span class="group-label">Work</span>
+          <label>Min<select class="work-min">${buildMinOptions(step.workMin ?? 0)}</select></label>
+          <label>Sec<select class="work-sec">${buildSecOptions(step.workSec ?? 30)}</select></label>
+        </div>
+        <div class="duration-group">
+          <span class="group-label">Rest</span>
+          <label>Min<select class="rest-min">${buildMinOptions(step.restMin ?? 0)}</select></label>
+          <label>Sec<select class="rest-sec">${buildSecOptions(step.restSec ?? 15)}</select></label>
+        </div>
+        <button type="button" class="remove-step">Remove</button>
+      `;
+      row.querySelectorAll('input, select').forEach(el => el.addEventListener('change', resetTimer));
+      row.querySelector('.remove-step').addEventListener('click', () => {
+        if (intervalList.children.length > 1) { row.remove(); resetTimer(); }
+      });
+      return row;
+    }
+
+    function clearTimer() {
+      intervalList.innerHTML = '';
+      intervalList.appendChild(createIntervalRow({ name: '', workMin: 0, workSec: 0, restMin: 0, restSec: 0 }));
+      roundsInput.value = '0';
+      repeatCountInput.value = '0';
+      repeatDelayInput.value = '0';
+      timerNameInput.value = '';
+      displayNameInput.value = '';
+      resetTimer();
+    }
+
+    function setDefaultIntervals() {
+      intervalList.innerHTML = '';
+      intervalList.appendChild(createIntervalRow({ name: '', workMin: 0, workSec: 30, restMin: 0, restSec: 15 }));
+    }
+
+    function getIntervalData() {
+      return Array.from(intervalList.children).map(row => ({
+        name: row.querySelector('.interval-name').value.trim(),
+        workMin: Number(row.querySelector('.work-min').value) || 0,
+        workSec: Number(row.querySelector('.work-sec').value) || 0,
+        restMin: Number(row.querySelector('.rest-min').value) || 0,
+        restSec: Number(row.querySelector('.rest-sec').value) || 0,
+      }));
+    }
+
+    function loadIntervalData(intervals) {
+      intervalList.innerHTML = '';
+      if (!intervals.length) return;
+      if ('type' in intervals[0]) {
+        let i = 0;
+        while (i < intervals.length) {
+          const s = intervals[i];
+          if (s.type === 'Work' || s.type === 'High' || s.type === 'Low') {
+            const next = intervals[i + 1];
+            const hasRest = next && next.type === 'Rest';
+            intervalList.appendChild(createIntervalRow({
+              name: s.name || '',
+              workMin: s.min || 0, workSec: s.sec || 0,
+              restMin: hasRest ? (next.min || 0) : 0,
+              restSec: hasRest ? (next.sec || 0) : 0,
+            }));
+            i += hasRest ? 2 : 1;
+          } else { i++; }
+        }
+      } else {
+        intervals.forEach(step => intervalList.appendChild(createIntervalRow(step)));
+      }
+    }
+
+    async function saveTimer() {
+      const name = timerNameInput.value.trim();
+      if (!name) { alert('Please enter a timer name'); return; }
+      const timerData = {
+        intervals: getIntervalData(),
+        rounds: roundsInput.value,
+        repeatCount: repeatCountInput.value,
+        repeatDelay: repeatDelayInput.value,
+        fullscreen: fullscreenInput.checked,
+        displayName: displayNameInput.value.trim(),
+      };
+      try {
+        await fetch(`/api/timers/${encodeURIComponent(name)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(timerData),
+        });
+        timerNameInput.value = '';
+        await populateSavedTimers();
+        alert(`Timer "${name}" saved!`);
+      } catch (e) {
+        alert('Failed to save timer. Check your connection.');
+      }
+    }
+
+    async function populateSavedTimers() {
+      loadTimerSelect.innerHTML = '<option value="">-- Select a timer --</option>';
+      try {
+        const res = await fetch('/api/timers');
+        const names = await res.json();
+        names.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          loadTimerSelect.appendChild(option);
+        });
+      } catch (e) {
+        console.error('Failed to load timers:', e);
+      }
+      const hasTimers = loadTimerSelect.options.length > 1;
+      loadTimerBtn.disabled = !hasTimers;
+      deleteTimerBtn.disabled = !hasTimers;
+    }
+
+    async function loadTimer() {
+      const name = loadTimerSelect.value;
+      if (!name) return;
+      try {
+        const res = await fetch(`/api/timers/${encodeURIComponent(name)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        loadIntervalData(data.intervals);
+        roundsInput.value = data.rounds;
+        repeatCountInput.value = data.repeatCount ?? (data.repeat ? 1 : 0) ?? 0;
+        repeatDelayInput.value = data.repeatDelay ?? 15;
+        fullscreenInput.checked = data.fullscreen;
+        timerNameInput.value = name;
+        displayNameInput.value = data.displayName ?? '';
+        resetTimer();
+      } catch (e) {
+        alert('Failed to load timer. Check your connection.');
+      }
+    }
+
+    async function deleteTimer() {
+      const name = loadTimerSelect.value;
+      if (!name) return;
+      if (confirm(`Delete timer "${name}"?`)) {
+        try {
+          await fetch(`/api/timers/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          await populateSavedTimers();
+          resetTimer();
+        } catch (e) {
+          alert('Failed to delete timer. Check your connection.');
+        }
+      }
+    }
+
+    function getSettings() {
+      const steps = [];
+      Array.from(intervalList.children).forEach(row => {
+        const name = row.querySelector('.interval-name').value.trim();
+        const workDuration = (Number(row.querySelector('.work-min').value) || 0) * 60 + (Number(row.querySelector('.work-sec').value) || 0);
+        const restDuration = (Number(row.querySelector('.rest-min').value) || 0) * 60 + (Number(row.querySelector('.rest-sec').value) || 0);
+        if (workDuration > 0) steps.push({ type: 'Work', duration: workDuration, name });
+        if (restDuration > 0) steps.push({ type: 'Rest', duration: restDuration, name: '' });
+      });
+      return {
+        steps: steps.length ? steps : [{ type: 'Work', duration: 30 }],
+        rounds: Math.max(1, Number(roundsInput.value) || 1),
+        repeatCount: Math.max(1, Number(repeatCountInput.value) || 1),
+        repeatDelay: Math.max(0, Number(repeatDelayInput.value) || 0),
+      };
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function getPhaseLabel(type) {
+      if (type === 'Work' || type === 'High' || type === 'Low') return 'Work';
+      return 'Rest';
+    }
+
+    function getNextWorkName(steps, currentStepIndex) {
+      for (let i = currentStepIndex + 1; i < steps.length; i++) {
+        const s = steps[i];
+        if ((s.type === 'Work' || s.type === 'High' || s.type === 'Low') && s.name) return s.name;
+      }
+      for (let i = 0; i <= currentStepIndex; i++) {
+        const s = steps[i];
+        if ((s.type === 'Work' || s.type === 'High' || s.type === 'Low') && s.name) return s.name;
+      }
+      return '';
+    }
+
+    function updateDisplay() {
+      const settings = getSettings();
+      const displayName = displayNameInput.value.trim();
+      timerNameDisplay.textContent = displayName;
+      timerNameDisplay.style.display = displayName ? '' : 'none';
+      let currentPhase = null;
+      if (isCountdown) {
+        statusEl.textContent = 'Get Ready';
+        timeEl.textContent = countdownTime.toString();
+        detailsEl.textContent = 'Starting in...';
+      } else if (isBetweenRepeats) {
+        statusEl.textContent = `Rest — Round ${currentSession} starts in...`;
+        timeEl.textContent = formatTime(repeatDelayLeft);
+        detailsEl.textContent = '';
+        currentPhase = 'rest';
+      } else {
+        const step = settings.steps[stepIndex];
+        const phase = getPhaseLabel(step.type);
+        const isWork = step.type === 'Work' || step.type === 'High' || step.type === 'Low';
+        currentPhase = isWork ? 'work' : 'rest';
+        const workIntervalsPerSequence = settings.steps.filter(s => s.type === 'Work' || s.type === 'High' || s.type === 'Low').length;
+        const totalWorkIntervals = workIntervalsPerSequence * settings.rounds;
+        const currentWorkIntervalInSequence = settings.steps.slice(0, stepIndex + 1).filter(s => s.type === 'Work' || s.type === 'High' || s.type === 'Low').length;
+        const currentWorkInterval = (round - 1) * workIntervalsPerSequence + currentWorkIntervalInSequence;
+        if (isWork) {
+          const label = active ? phase : `${phase} ready`;
+          statusEl.textContent = step.name ? `${label} — ${step.name}` : label;
+        } else {
+          const nextName = getNextWorkName(settings.steps, stepIndex);
+          const label = active ? phase : `${phase} ready`;
+          statusEl.textContent = nextName ? `${label} — Next: ${nextName}` : label;
+        }
+        timeEl.textContent = formatTime(timeLeft);
+        detailsEl.textContent = `Interval ${currentWorkInterval} of ${totalWorkIntervals} | Round ${currentSession} of ${settings.repeatCount}`;
+      }
+      pauseBtn.disabled = !active;
+      const inFullscreen = timerCard.classList.contains('fullscreen-card');
+      timeEl.classList.remove('phase-work', 'phase-rest');
+      if (inFullscreen && currentPhase) timeEl.classList.add(`phase-${currentPhase}`);
+    }
+
+    function advanceStep() {
+      const settings = getSettings();
+      stepIndex += 1;
+      if (stepIndex < settings.steps.length) {
+        const remainingAllRest = settings.steps.slice(stepIndex).every(s => s.type !== 'Work' && s.type !== 'High' && s.type !== 'Low');
+        if (remainingAllRest && round === settings.rounds && currentSession < settings.repeatCount) {
+          stepIndex = settings.steps.length;
+        }
+      }
+      if (stepIndex >= settings.steps.length) {
+        round += 1;
+        if (round > settings.rounds) {
+          if (currentSession < settings.repeatCount) {
+            currentSession += 1;
+            if (settings.repeatDelay > 0) {
+              isBetweenRepeats = true;
+              repeatDelayLeft = settings.repeatDelay;
+              statusEl.textContent = 'Rest before next session';
+              detailsEl.textContent = `Next session ${currentSession} of ${settings.repeatCount} starts soon`;
+              return;
+            }
+            round = 1;
+            stepIndex = 0;
+            timeLeft = settings.steps[0].duration;
+            playPhaseSound(settings.steps[0].type);
+            return;
+          }
+          clearInterval(timerId);
+          timerId = null;
+          active = false;
+          statusEl.textContent = 'Done — Great Work!';
+          detailsEl.textContent = `Completed ${settings.rounds} rounds.`;
+          pauseBtn.disabled = true;
+          exitFullscreen();
+          return;
+        }
+        stepIndex = 0;
+      }
+      timeLeft = settings.steps[stepIndex].duration;
+      const nextType = settings.steps[stepIndex].type;
+      if (nextType === 'Work' || nextType === 'High' || nextType === 'Low') {
+        statusEl.textContent = 'Back to work';
+        playWorkStart();
+      } else {
+        statusEl.textContent = 'Take a rest';
+        playRestStart();
+      }
+      timeEl.classList.add('updating');
+      setTimeout(() => timeEl.classList.remove('updating'), 500);
+    }
+
+    function skipForward() {
+      const settings = getSettings();
+      isCountdown = false;
+      if (isBetweenRepeats) {
+        isBetweenRepeats = false;
+        repeatDelayLeft = 0;
+        round = 1;
+        stepIndex = 0;
+        timeLeft = settings.steps[0].duration;
+        updateDisplay();
+        return;
+      }
+      stepIndex += 1;
+      if (stepIndex >= settings.steps.length) {
+        round += 1;
+        stepIndex = 0;
+        if (round > settings.rounds) {
+          if (currentSession < settings.repeatCount) {
+            currentSession += 1;
+            round = 1;
+          } else {
+            if (timerId) { clearInterval(timerId); timerId = null; }
+            active = false;
+            statusEl.textContent = 'Done — Great Work!';
+            detailsEl.textContent = `Completed ${settings.rounds} rounds.`;
+            pauseBtn.disabled = true;
+            exitFullscreen();
+            updateDisplay();
+            return;
+          }
+        }
+      }
+      timeLeft = settings.steps[stepIndex].duration;
+      timeEl.classList.add('updating');
+      setTimeout(() => timeEl.classList.remove('updating'), 500);
+      updateDisplay();
+    }
+
+    function skipBack() {
+      const settings = getSettings();
+      if (isCountdown) {
+        isCountdown = false;
+        stepIndex = 0;
+        round = 1;
+        timeLeft = settings.steps[0].duration;
+        timeEl.classList.add('updating');
+        setTimeout(() => timeEl.classList.remove('updating'), 500);
+        updateDisplay();
+        return;
+      }
+      if (isBetweenRepeats) {
+        isBetweenRepeats = false;
+        currentSession -= 1;
+        round = settings.rounds;
+        stepIndex = settings.steps.length - 1;
+        timeLeft = settings.steps[stepIndex].duration;
+        timeEl.classList.add('updating');
+        setTimeout(() => timeEl.classList.remove('updating'), 500);
+        updateDisplay();
+        return;
+      }
+      const elapsed = settings.steps[stepIndex].duration - timeLeft;
+      if (elapsed > 3) {
+        timeLeft = settings.steps[stepIndex].duration;
+        timeEl.classList.add('updating');
+        setTimeout(() => timeEl.classList.remove('updating'), 500);
+        updateDisplay();
+        return;
+      }
+      stepIndex -= 1;
+      if (stepIndex < 0) {
+        round -= 1;
+        if (round < 1) {
+          if (currentSession > 1) {
+            currentSession -= 1;
+            round = settings.rounds;
+            stepIndex = settings.steps.length - 1;
+          } else {
+            round = 1;
+            stepIndex = 0;
+            timeLeft = settings.steps[0].duration;
+            timeEl.classList.add('updating');
+            setTimeout(() => timeEl.classList.remove('updating'), 500);
+            updateDisplay();
+            return;
+          }
+        } else {
+          stepIndex = settings.steps.length - 1;
+        }
+      }
+      timeLeft = settings.steps[stepIndex].duration;
+      timeEl.classList.add('updating');
+      setTimeout(() => timeEl.classList.remove('updating'), 500);
+      updateDisplay();
+    }
+
+    function startTimer() {
+      const settings = getSettings();
+      if (!timerId) {
+        if (!active) {
+          isCountdown = true;
+          countdownTime = 3;
+          active = true;
+          pauseBtn.disabled = false;
+          if (fullscreenInput.checked) enterFullscreen();
+        }
+        timerId = setInterval(() => {
+          if (isCountdown) {
+            countdownTime--;
+            if (countdownTime <= 0) {
+              isCountdown = false;
+              timeLeft = settings.steps[0].duration;
+              playPhaseSound(settings.steps[0].type);
+              timeEl.classList.add('updating');
+              setTimeout(() => timeEl.classList.remove('updating'), 500);
+            }
+          } else if (isBetweenRepeats) {
+            repeatDelayLeft -= 1;
+            if (repeatDelayLeft <= 0) {
+              isBetweenRepeats = false;
+              round = 1;
+              stepIndex = 0;
+              timeLeft = settings.steps[0].duration;
+              playPhaseSound(settings.steps[0].type);
+              timeEl.classList.add('updating');
+              setTimeout(() => timeEl.classList.remove('updating'), 500);
+            }
+          } else {
+            if (timeLeft <= 0) {
+              const currentStep = settings.steps[stepIndex];
+              if (currentStep && (currentStep.type === 'Work' || currentStep.type === 'High' || currentStep.type === 'Low')) playBell();
+              advanceStep();
+            } else {
+              timeLeft -= 1;
+            }
+          }
+          updateDisplay();
+        }, 1000);
+      }
+      updateDisplay();
+    }
+
+    function pauseTimer() {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      active = false;
+      statusEl.textContent = 'Paused';
+      pauseBtn.disabled = true;
+      exitFullscreen();
+      updateDisplay();
+    }
+
+    function resetTimer() {
+      const settings = getSettings();
+      pauseTimer();
+      stepIndex = 0;
+      round = 1;
+      currentSession = 1;
+      isBetweenRepeats = false;
+      repeatDelayLeft = 0;
+      timeLeft = settings.steps[0].duration;
+      isCountdown = false;
+      countdownTime = 0;
+      statusEl.textContent = 'Ready to start';
+      exitFullscreen();
+      updateDisplay();
+    }
+
+    addStepBtn.addEventListener('click', () => {
+      intervalList.appendChild(createIntervalRow({ name: '', workMin: 0, workSec: 30, restMin: 0, restSec: 15 }));
+      resetTimer();
+    });
+    document.getElementById('clearTimerBtn').addEventListener('click', clearTimer);
+    saveTimerBtn.addEventListener('click', saveTimer);
+    loadTimerBtn.addEventListener('click', loadTimer);
+    deleteTimerBtn.addEventListener('click', deleteTimer);
+    startBtn.addEventListener('click', () => { unlockAudio(); startTimer(); });
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    document.getElementById('skipBackBtn').addEventListener('click', skipBack);
+    document.getElementById('skipFwdBtn').addEventListener('click', skipForward);
+    [roundsInput, repeatCountInput, repeatDelayInput, fullscreenInput].forEach(input => input.addEventListener('input', resetTimer));
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CIRCUIT DESIGNER
+    // ═══════════════════════════════════════════════════════════════════════
+
+    let allExercises = [];
+    let currentCircuit = { strength: [], cardio: [], core: [] };
+    let currentFilter = 'All';
+    let currentCircuitTitle = 'Generated Circuit';
+
+    const strengthCountEl   = document.getElementById('strengthCount');
+    const cardioCountEl     = document.getElementById('cardioCount');
+    const coreCountEl       = document.getElementById('coreCount');
+    const generateBtn       = document.getElementById('generateBtn');
+    const circuitResult     = document.getElementById('circuitResult');
+    const circuitSections   = document.getElementById('circuitSections');
+    const circuitTitleEl    = document.getElementById('circuitTitle');
+    const circuitTotalBadge = document.getElementById('circuitTotalBadge');
+    const circuitNameEl     = document.getElementById('circuitName');
+    const saveCircuitBtn    = document.getElementById('saveCircuitBtn');
+    const loadCircuitSelect = document.getElementById('loadCircuitSelect');
+    const loadCircuitBtn    = document.getElementById('loadCircuitBtn');
+    const deleteCircuitBtn  = document.getElementById('deleteCircuitBtn');
+    const exNameEl          = document.getElementById('exName');
+    const exCategoryEl      = document.getElementById('exCategory');
+    const addExBtn          = document.getElementById('addExBtn');
+    const exerciseListEl    = document.getElementById('exerciseList');
+    const exStatsEl         = document.getElementById('exStats');
+    const toastEl           = document.getElementById('toast');
+
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function buildCountOptions(el, defaultVal = 4, max = 15) {
+      el.innerHTML = '';
+      for (let i = 0; i <= max; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        if (i === defaultVal) opt.selected = true;
+        el.appendChild(opt);
+      }
+    }
+
+    function pickRandom(arr, count) {
+      return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
+    }
+
+    buildCountOptions(strengthCountEl, 4);
+    buildCountOptions(cardioCountEl, 2);
+    buildCountOptions(coreCountEl, 2);
+
+    // Inner tab switching (Circuit Designer / Exercise Database)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).style.display = '';
+      });
+    });
+
+    async function fetchExercises() {
+      try {
+        const res = await fetch('/api/exercises');
+        allExercises = await res.json();
+      } catch (e) {
+        console.error('Failed to fetch exercises:', e);
+      }
+      renderExerciseList();
+    }
+
+    function renderExerciseList() {
+      const filtered = currentFilter === 'All' ? allExercises : allExercises.filter(e => e.category === currentFilter);
+      const counts = { Strength: 0, Cardio: 0, Core: 0 };
+      allExercises.forEach(e => counts[e.category]++);
+      exStatsEl.textContent = `${allExercises.length} total — ${counts.Strength} Strength · ${counts.Cardio} Cardio · ${counts.Core} Core`;
+      if (filtered.length === 0) {
+        exerciseListEl.innerHTML = '<div class="empty-msg">No exercises here yet. Add some above!</div>';
+        return;
+      }
+      exerciseListEl.innerHTML = '';
+      filtered.forEach(ex => {
+        const item = document.createElement('div');
+        item.className = 'db-exercise-item';
+        item.innerHTML = `
+          <span class="db-exercise-name">${escHtml(ex.name)}</span>
+          <span class="badge badge-${ex.category.toLowerCase()}">${escHtml(ex.category)}</span>
+          <button class="delete-btn" data-id="${ex.id}">Remove</button>
+        `;
+        item.querySelector('.delete-btn').addEventListener('click', () => deleteExercise(ex.id, ex.name));
+        exerciseListEl.appendChild(item);
+      });
+    }
+
+    async function addExercise() {
+      const name = exNameEl.value.trim();
+      const category = exCategoryEl.value;
+      if (!name) { showToast('Please enter an exercise name'); return; }
+      try {
+        const res = await fetch('/api/exercises', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, category }),
+        });
+        if (!res.ok) { showToast('Failed to add exercise'); return; }
+        const newEx = await res.json();
+        allExercises.push(newEx);
+        allExercises.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+        exNameEl.value = '';
+        renderExerciseList();
+        showToast(`"${name}" added to ${category}`);
+      } catch (e) {
+        showToast('Failed to add exercise');
+      }
+    }
+
+    async function deleteExercise(id, name) {
+      if (!confirm(`Remove "${name}" from the database?`)) return;
+      try {
+        await fetch(`/api/exercises/${id}`, { method: 'DELETE' });
+        allExercises = allExercises.filter(e => e.id !== id);
+        renderExerciseList();
+        showToast(`"${name}" removed`);
+      } catch (e) {
+        showToast('Failed to remove exercise');
+      }
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.cat;
+        renderExerciseList();
+      });
+    });
+
+    addExBtn.addEventListener('click', addExercise);
+    exNameEl.addEventListener('keydown', e => { if (e.key === 'Enter') addExercise(); });
+
+    function generateCircuit() {
+      const sCount  = parseInt(strengthCountEl.value) || 0;
+      const caCount = parseInt(cardioCountEl.value) || 0;
+      const coCount = parseInt(coreCountEl.value) || 0;
+      if (sCount + caCount + coCount === 0) { showToast('Select at least 1 exercise to generate a circuit'); return; }
+      const pools = {
+        strength: allExercises.filter(e => e.category === 'Strength'),
+        cardio:   allExercises.filter(e => e.category === 'Cardio'),
+        core:     allExercises.filter(e => e.category === 'Core'),
+      };
+      if (sCount  > 0 && pools.strength.length === 0) { showToast('No Strength exercises in the database yet'); return; }
+      if (caCount > 0 && pools.cardio.length   === 0) { showToast('No Cardio exercises in the database yet'); return; }
+      if (coCount > 0 && pools.core.length     === 0) { showToast('No Core exercises in the database yet'); return; }
+      if (sCount  > pools.strength.length) showToast(`Only ${pools.strength.length} Strength exercise(s) available — using all`);
+      else if (caCount > pools.cardio.length) showToast(`Only ${pools.cardio.length} Cardio exercise(s) available — using all`);
+      else if (coCount > pools.core.length)   showToast(`Only ${pools.core.length} Core exercise(s) available — using all`);
+      currentCircuit = {
+        strength: pickRandom(pools.strength, Math.min(sCount,  pools.strength.length)),
+        cardio:   pickRandom(pools.cardio,   Math.min(caCount, pools.cardio.length)),
+        core:     pickRandom(pools.core,     Math.min(coCount, pools.core.length)),
+      };
+      currentCircuitTitle = 'Generated Circuit';
+      renderCircuit();
+    }
+
+    function renderCircuit() {
+      circuitResult.style.display = '';
+      circuitTitleEl.textContent = currentCircuitTitle;
+      const total = currentCircuit.strength.length + currentCircuit.cardio.length + currentCircuit.core.length;
+      circuitTotalBadge.textContent = `${total} exercise${total !== 1 ? 's' : ''}`;
+      circuitSections.innerHTML = '';
+      [{ key: 'strength', label: 'Strength' }, { key: 'cardio', label: 'Cardio' }, { key: 'core', label: 'Core' }].forEach(({ key, label }) => {
+        const exercises = currentCircuit[key];
+        if (!exercises.length) return;
+        const section = document.createElement('div');
+        section.className = 'category-section';
+        section.innerHTML = `<div class="category-header ${key}">${label} (${exercises.length})</div>`;
+        exercises.forEach((ex, idx) => {
+          const item = document.createElement('div');
+          item.className = 'exercise-item';
+          item.innerHTML = `
+            <span class="exercise-num">${idx + 1}</span>
+            <span class="exercise-name">${escHtml(ex.name)}</span>
+            <button class="reroll-btn" data-key="${key}" data-idx="${idx}" title="Swap for a different exercise">&#8635; Re-roll</button>
+          `;
+          item.querySelector('.reroll-btn').addEventListener('click', e => {
+            const btn = e.currentTarget;
+            rerollExercise(btn.dataset.key, parseInt(btn.dataset.idx));
+          });
+          section.appendChild(item);
+        });
+        circuitSections.appendChild(section);
+      });
+    }
+
+    function rerollExercise(key, idx) {
+      const catMap = { strength: 'Strength', cardio: 'Cardio', core: 'Core' };
+      const category = catMap[key];
+      const usedIds = new Set(currentCircuit[key].map(e => e.id));
+      const pool = allExercises.filter(e => e.category === category && !usedIds.has(e.id));
+      if (pool.length === 0) { showToast(`No more ${category} exercises to swap in`); return; }
+      currentCircuit[key][idx] = pool[Math.floor(Math.random() * pool.length)];
+      renderCircuit();
+    }
+
+    async function saveCircuit() {
+      const name = circuitNameEl.value.trim();
+      if (!name) { showToast('Please enter a circuit name'); return; }
+      const total = currentCircuit.strength.length + currentCircuit.cardio.length + currentCircuit.core.length;
+      if (total === 0) { showToast('Generate a circuit first'); return; }
+      const data = {
+        exercises: { strength: currentCircuit.strength, cardio: currentCircuit.cardio, core: currentCircuit.core },
+        counts: {
+          strength: parseInt(strengthCountEl.value) || 0,
+          cardio:   parseInt(cardioCountEl.value)   || 0,
+          core:     parseInt(coreCountEl.value)     || 0,
+        },
+      };
+      try {
+        await fetch(`/api/circuits/${encodeURIComponent(name)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        circuitNameEl.value = '';
+        await populateSavedCircuits();
+        showToast(`Circuit "${name}" saved!`);
+      } catch (e) {
+        showToast('Failed to save circuit');
+      }
+    }
+
+    async function populateSavedCircuits() {
+      loadCircuitSelect.innerHTML = '<option value="">-- Select a circuit --</option>';
+      try {
+        const res = await fetch('/api/circuits');
+        const names = await res.json();
+        names.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          loadCircuitSelect.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load circuits:', e);
+      }
+      const has = loadCircuitSelect.options.length > 1;
+      loadCircuitBtn.disabled = !has;
+      deleteCircuitBtn.disabled = !has;
+    }
+
+    async function loadCircuit() {
+      const name = loadCircuitSelect.value;
+      if (!name) return;
+      try {
+        const res = await fetch(`/api/circuits/${encodeURIComponent(name)}`);
+        if (!res.ok) { showToast('Circuit not found'); return; }
+        const data = await res.json();
+        currentCircuit = {
+          strength: data.exercises?.strength || [],
+          cardio:   data.exercises?.cardio   || [],
+          core:     data.exercises?.core     || [],
+        };
+        strengthCountEl.value = data.counts?.strength ?? 0;
+        cardioCountEl.value   = data.counts?.cardio   ?? 0;
+        coreCountEl.value     = data.counts?.core     ?? 0;
+        currentCircuitTitle   = name;
+        circuitNameEl.value   = name;
+        renderCircuit();
+      } catch (e) {
+        showToast('Failed to load circuit');
+      }
+    }
+
+    async function deleteCircuit() {
+      const name = loadCircuitSelect.value;
+      if (!name) return;
+      if (!confirm(`Delete circuit "${name}"?`)) return;
+      try {
+        await fetch(`/api/circuits/${encodeURIComponent(name)}`, { method: 'DELETE' });
+        await populateSavedCircuits();
+        showToast(`Circuit "${name}" deleted`);
+      } catch (e) {
+        showToast('Failed to delete circuit');
+      }
+    }
+
+    generateBtn.addEventListener('click', generateCircuit);
+    saveCircuitBtn.addEventListener('click', saveCircuit);
+    loadCircuitBtn.addEventListener('click', loadCircuit);
+    deleteCircuitBtn.addEventListener('click', deleteCircuit);
+    loadCircuitSelect.addEventListener('change', () => {
+      const has = !!loadCircuitSelect.value;
+      loadCircuitBtn.disabled = !has;
+      deleteCircuitBtn.disabled = !has;
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════════════
+    setDefaultIntervals();
+    window.addEventListener('load', async () => {
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+      await populateSavedTimers();
+      resetTimer();
+      await fetchExercises();
+      await populateSavedCircuits();
+    });
+  </script>
+</body>
+</html>

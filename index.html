@@ -1001,9 +1001,9 @@
       return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
     }
 
-    buildCountOptions(strengthCountEl, 4);
-    buildCountOptions(cardioCountEl, 2);
-    buildCountOptions(coreCountEl, 2);
+    buildCountOptions(strengthCountEl, 0);
+    buildCountOptions(cardioCountEl, 0);
+    buildCountOptions(coreCountEl, 0);
 
     // Inner tab switching (Circuit Designer / Exercise Database)
     document.querySelectorAll('.tab-btn').forEach(btn => {

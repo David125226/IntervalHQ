@@ -1052,6 +1052,8 @@
       const name = exNameEl.value.trim();
       const category = exCategoryEl.value;
       if (!name) { showToast('Please enter an exercise name'); return; }
+      const duplicate = allExercises.find(e => e.name.toLowerCase() === name.toLowerCase());
+      if (duplicate) { showToast(`"${duplicate.name}" already exists in ${duplicate.category}`); return; }
       try {
         const res = await fetch('/api/exercises', {
           method: 'POST',

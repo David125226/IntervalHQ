@@ -671,18 +671,25 @@
       return '';
     }
 
+    function isTabata() {
+      const name = timerNameInput.value.trim().toLowerCase();
+      const displayName = displayNameInput.value.trim().toLowerCase();
+      return name.includes('tabata') || displayName.includes('tabata');
+    }
+
     function updateDisplay() {
       const settings = getSettings();
       const displayName = displayNameInput.value.trim();
       timerNameDisplay.textContent = displayName;
       timerNameDisplay.style.display = displayName ? '' : 'none';
+      const roundLabel = isTabata() ? 'Tabata' : 'Round';
       let currentPhase = null;
       if (isCountdown) {
         statusEl.textContent = 'Get Ready';
         timeEl.textContent = countdownTime.toString();
         detailsEl.textContent = 'Starting in...';
       } else if (isBetweenRepeats) {
-        statusEl.textContent = `Rest — Round ${currentSession} starts in...`;
+        statusEl.textContent = `Rest — ${roundLabel} ${currentSession} starts in...`;
         timeEl.textContent = formatTime(repeatDelayLeft);
         detailsEl.textContent = '';
         currentPhase = 'rest';
@@ -704,7 +711,7 @@
           statusEl.textContent = nextName ? `${label} — Next: ${nextName}` : label;
         }
         timeEl.textContent = formatTime(timeLeft);
-        detailsEl.textContent = `Interval ${currentWorkInterval} of ${totalWorkIntervals} | Round ${currentSession} of ${settings.repeatCount}`;
+        detailsEl.textContent = `Interval ${currentWorkInterval} of ${totalWorkIntervals} | ${roundLabel} ${currentSession} of ${settings.repeatCount}`;
       }
       pauseBtn.disabled = !active;
       const inFullscreen = timerCard.classList.contains('fullscreen-card');
